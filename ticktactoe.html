@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .message:empty {
+            padding-top: 1.125em;
+        }
+        .main {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        .board {
+            width: min(70vmin, 35rem);
+            height: min(70vmin, 35rem);
+            display: flex;
+            flex-direction: column;
+        }
+        .row {
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+        .cell {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: solid black 4px;
+            border-right: solid black 4px;
+        }
+        .row:last-child .cell{
+            border-bottom: none;
+        }
+        .row .cell:last-child{
+            border-right: none;
+        }
+        button {
+            margin-top: 10px;
+        }
+    </style>
+    <title>Tic-Tac-Toe</title>
+</head>
+<body>
+    <div class="main">
+        <div class="board"></div>
+        <div class="size-btns">
+            <button class="shrink" onclick="shrinkBoard()" disabled>-</button>
+            <button class="grow" onclick="growBoard()">+</button>
+        </div>
+        <button class="randomBtn" onclick="randomTurn()">Random turn</button>
+        <button class="reset" onclick="reset()">Reset</button>
+        <h4 class="message">&#8203;</h4>
+    </div>
+</body>
+<script>
+    const board = document.querySelector('.board')
+    const message = document.querySelector('.message')
+    const shrinkBtn = document.querySelector('.size-btns .shrink')
+    const growBtn = document.querySelector('.size-btns .grow')
+    const randomBtn = document.querySelector('.randomBtn')
+
+    const INITIAL_BOARD_SIZE = 3
+    const MIN_BOARD_SIZE = 3
+    const MAX_BOARD_SIZE = 7
+
+    let boardSize = INITIAL_BOARD_SIZE
+    let isPlayerOnesTurn = true
+    let gameStarted
+    let gameOver
+
+    const reset = () => {
+        board.childNodes.forEach(row => {
+            row.childNodes.forEach(cell => {
+                cell.isUsed = false
+                cell.innerHTML = ''
+            })
+        })
+        message.innerHTML = ''
+        randomBtn.disabled = false
+        gameStarted = false
+        gameOver = false
+        isPlayerOnesTurn = true
+        if (boardSize > 3) shrinkBtn.disabled = false
+        if (boardSize < 7) growBtn.disabled = false
+    }
+
+    const startGame = () => {
+        shrinkBtn.disabled = true
+        growBtn.disabled = true
+        gameStarted = true
+    }
+
+    const currentPlayer = () => {
+        const isCurrentPlayerX = isPlayerOnesTurn
+        isPlayerOnesTurn = !isPlayerOnesTurn
+        return isCurrentPlayerX ? 'X': 'O'
+    }
+
+    const createRow = () => {
+        const row = document.createElement('div')
+        row.classList.add('row')
+        return row
+    }
+
+    const createCell = () => {
+        const cell = document.createElement('div')
+        cell.classList.add('cell')
+        cell.isUsed = false
+        cell.addEventListener('click', () => {
+            if (!gameStarted)
+                startGame()
+            if (!cell.isUsed && !gameOver){
+                cell.innerHTML = currentPlayer()
+                cell.isUsed = true
+                checkForWinner()
+            }
+        })
+        return cell
+    }
+
+    const updatePlayerSizes = () => {
+        const cell = document.querySelector('.cell')
+        const size = cell.offsetWidth * 0.7
+        board.style.fontSize = `${size}px`
+    }
+
+    const growBoard = () => {
+        boardSize++
+        board.childNodes.forEach(row => {
+            const cell = createCell()
+            row.appendChild(cell)
+        })
+        const row = createRow()
+        for (let j = 0; j < boardSize; j++){
+            const cell = createCell()
+            row.appendChild(cell)
+        }
+        board.appendChild(row)
+        if (boardSize === 7) growBtn.disabled = true
+        if (boardSize > 3) shrinkBtn.disabled = false
+        updatePlayerSizes()
+    }
+
+    const shrinkBoard = () => {
+        boardSize--
+        board.removeChild(board.lastChild)
+        board.childNodes.forEach(row => {
+            row.removeChild(row.lastChild)
+        })
+        if (boardSize === 3) shrinkBtn.disabled = true
+        if (boardSize < 7) growBtn.disabled = false
+        updatePlayerSizes()
+    }
+
+    const getResult = () => {
+        let noEmptyCellsExist = true
+
+        let checkHorizontalWinner = true
+        let prevHorizontal = null
+
+        let checkDiagonalWinner = [ true, true ]
+        let prevDiagonal = [ null, null ]
+
+        let checkVerticalWinner = []
+        let prevVertical = []
+
+        for (let i = 0; i < boardSize; i++){
+            checkVerticalWinner.push(true)
+            prevVertical.push(null)
+        }
+
+        for (let i = 0; i < boardSize; i++) {
+            checkHorizontalWinner = true
+            prevHorizontal = null
+            const row = board.children[i]
+            for (let j = 0; j < boardSize; j++) {
+                const cell = row.children[j]
+                if (!cell.isUsed)
+                  noEmptyCellsExist = false
+                const cellPlayer = cell.innerHTML
+                if (j > 0) {
+                    // Check for horizontal winner
+                    if (checkHorizontalWinner){
+                        if (cellPlayer && cellPlayer === prevHorizontal){
+                            if (j === (boardSize - 1)){
+                                return { status: 'GAME_OVER', winner: cellPlayer}
+                            }
+                        } else {
+                            checkHorizontalWinner = false
+                        }
+                    }
+                }
+                if (i > 0){
+                    // Check for diagonal winner
+                    if (checkDiagonalWinner[0] && (j === i)) {
+                        if (cellPlayer && cellPlayer === prevDiagonal[0]){
+                            if (i === (boardSize - 1)){
+                                return { status: 'GAME_OVER', winner: cellPlayer}
+                            }
+                        } else {
+                            checkDiagonalWinner[0] = false
+                        }
+                    }
+                    if (checkDiagonalWinner[1] && (j === (boardSize - i - 1))) {
+                        if (cellPlayer && cellPlayer === prevDiagonal[1]){
+                            if (i === (boardSize - 1)){
+                                return { status: 'GAME_OVER', winner: cellPlayer}
+                            }
+                        } else {
+                            checkDiagonalWinner[1] = false
+                        }
+                    }
+                    // Check for Vertical winner
+                    for (let vi = 0; vi < boardSize; vi++){
+                        if (checkVerticalWinner[vi] && vi === j){
+                            if (cellPlayer && cellPlayer === prevVertical[vi]){
+                                if (i === (boardSize - 1)){
+                                    return { status: 'GAME_OVER', winner: cellPlayer}
+                                }
+                            } else {
+                                checkVerticalWinner[vi] = false
+                            }
+                        }
+                    }
+                }
+                // Update previous cellPlayer values
+                for (let vi = 0; vi < boardSize; vi++){
+                    if (checkVerticalWinner[vi] && vi === j)
+                        prevVertical[vi] = cellPlayer
+                }
+                if (checkDiagonalWinner[0] && (j === i)) prevDiagonal[0] = cellPlayer
+                if (checkDiagonalWinner[1] && (j === (boardSize - i - 1))) prevDiagonal[1] = cellPlayer
+                prevHorizontal = cellPlayer
+            }
+        }
+        if (noEmptyCellsExist) return { status: 'DRAW'}
+    }
+
+    const endGame = (endingMessage) => {
+        message.innerHTML = endingMessage
+        randomBtn.disabled = true
+        gameOver = true
+    }
+
+    const checkForWinner = () => {
+        const result = getResult()
+        if (result?.status === 'GAME_OVER')
+            endGame(result.winner  + ' has won the game!')
+        else if (result?.status === 'DRAW')
+            endGame('It\'s a tie!')
+    }
+    
+    const randomInt = (min, max) => {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min) + min);
+    }
+    
+    const randomTurn = () => {
+        let availableCells = []
+        board.childNodes.forEach((row, i) => {
+            row.childNodes.forEach((cell, j) => {
+                if (!cell.isUsed)
+                availableCells.push([i, j])
+            })
+        })
+        const randomCell = randomInt(0, availableCells.length)
+        const randomCellRow = availableCells[randomCell][0]
+        const randomCellColumn = availableCells[randomCell][1]
+        board.childNodes[randomCellRow].childNodes[randomCellColumn].click()
+    }
+
+    for (let i = 0; i < INITIAL_BOARD_SIZE; i++){
+        const row = createRow()
+        for (let j = 0; j < INITIAL_BOARD_SIZE; j++){
+            const cell = createCell()
+            row.appendChild(cell)
+        }
+        board.appendChild(row)
+    }
+
+    updatePlayerSizes()
+    window.addEventListener('resize', updatePlayerSizes)
+</script>
+</html>

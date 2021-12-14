@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            font-family: sans-serif;
+        }
+        body,
+        .controls,
+        .clock,
+        .basics {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 39vmin;
+        }
+        .controls {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+        }
+        .slider {
+            text-align: center;
+            width: 100%;
+            margin: 0 1rem;
+        }
+        input[type=range] {
+            width: calc(min(100%, 20rem));
+        }
+        .details {
+            display: flex;
+            flex-direction: column;
+            font-size: 15vmin;
+        }
+    </style>
+</head>
+<body>
+    <div class="clock">
+        <div class="basics">
+            <div class="hours"></div>
+            <div class="seperator">:</div>
+            <div class="minutes"></div>
+        </div>
+        <div class="details">
+            <div class="seconds"></div>
+            <div class="daytime"></div>
+        </div>
+    </div>
+    <script>
+        const basicsElement = document.querySelector('.basics')
+        const hoursElement = document.querySelector('.hours')
+        const minutesElement = document.querySelector('.minutes')
+        const detailsElement = document.querySelector('.details')
+        const secondsElement = document.querySelector('.seconds')
+        const daytimeElement = document.querySelector('.daytime')
+
+        const updateTime = (currentTime = new Date()) => {
+            let seconds = currentTime.getSeconds()
+            if (seconds < 10) seconds = '0' + seconds
+            
+            let minutes = currentTime.getMinutes()
+            if (minutes < 10) minutes = '0' + minutes
+
+            let hours = currentTime.getHours()
+
+            const isPm = hours > 11
+
+            if (isPm) hours = hours - 12
+            if (hours === 0) hours = 12
+
+            const daytime = isPm ? 'PM' : 'AM'
+
+            hoursElement.innerText = hours
+            minutesElement.innerText = minutes
+            secondsElement.innerText = seconds
+            daytimeElement.innerText = daytime
+        }
+
+        const startTime = new Date()
+
+        const animationInterval = (callback, ms) => {
+            const startMs = startTime.getMilliseconds()
+
+            const scheduleFrame = (time) => {
+                const frame = (time) => {
+                    callback()
+                    scheduleFrame(time - performance.now())
+                }
+                const elapsed = time - startMs
+                const roundedElapsed = Math.round(elapsed / ms) * ms
+                const targetNext = startMs + roundedElapsed + ms
+                const delay = targetNext - performance.now()
+                setTimeout(() => requestAnimationFrame(frame), delay)
+            }
+            
+            scheduleFrame(startMs)
+        }
+
+        updateTime(startTime)
+        animationInterval(updateTime, 1000)
+    </script>
+</body>
+</html>

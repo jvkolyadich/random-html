@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            color: white;
+            margin: 0;
+            height: 100vh;
+            background-color: black;
+        }
+        .notch {
+            background-color: white;
+            position: absolute;
+            width: 0.5rem;
+            height: 3rem;
+            border-radius: 0.1rem;
+        }
+        .horizontal.notch {
+            transform: rotate(90deg);
+            -webkit-transform: rotate(90deg);
+        }
+        .diagonal-1.notch {
+            transform: rotate(45deg);
+            -webkit-transform: rotate(45deg);
+        }
+        .diagonal-2.notch {
+            transform: rotate(-45deg);
+            -webkit-transform: rotate(-45deg);
+        }
+        .outer-circle {
+            background-color: white;
+            position: absolute;
+            width: 2.2rem;
+            height: 2.2rem;
+            border-radius: 1.1rem;
+        }
+        .inner-circle {
+            background-color: black;
+            position: absolute;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 0.5rem;
+        }
+        .settings-btn.initial-load {
+            opacity: 1;
+        }
+        .settings-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: 2s ease-in-out;
+        }
+        .settings-btn.hidden {
+            opacity: 0;
+            transition: none;
+        }
+        .settings-btn:not(.hidden):hover {
+            opacity: 1;
+            transition: 0.3s ease-in-out;
+        }
+        .settings:not(.active) {
+            display: none;
+        }
+        .settings {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+        .settings td div {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0.25rem 0;
+        }
+        .settings input[type=checkbox] {
+            margin-right: 0.5rem;
+        }
+        .end-screen {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: black;
+            z-index: 1;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+        }
+        .end-screen > * {
+            margin: 0.5rem 0;
+        }
+    </style>
+    <title>DVD</title>
+</head>
+<body>
+    <div class="settings-btn initial-load">
+        <div class="vertical notch"></div>
+        <div class="diagonal-1 notch"></div>
+        <div class="horizontal notch"></div>
+        <div class="diagonal-2 notch"></div>
+        <div class="outer-circle"></div>
+        <div class="inner-circle"></div>
+    </div>
+    <table class="settings">
+        <tr>
+            <td><div><label for="fps">Target FPS:</label></div></td>
+            <td><div><span class="fps value"></span></div></td>
+            <td><div><input type="range" id="fps" min="1" max="90" value="30"/></div></td>
+        </tr>
+        <tr>
+            <td><div><label for="speed">Speed:</label></div></td>
+            <td><div><span class="speed value"></span></div></td>
+            <td><div><input type="range" id="speed" min="1" max="15" value="4"/></div></td>
+        </tr>
+        <tr>
+            <td><div><label for="scale">Scale:</label></div></td>
+            <td><div><span class="scale value"></span></div></td>
+            <td><div><input type="range" id="scale" min="5" max="100" value="15"/></div></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <div>
+                    <input type="checkbox" id="end-on-corner" checked/>
+                    <label for="end-on-corner">End after hitting corner</label>
+                </div>
+            </td>
+        </tr>
+    </table>
+    <div class="end-screen">
+        <h1>IT HIT THE CORNER!</h1>
+        <button onclick="resetAnimation()">Reset</button>
+    </div>
+    <canvas></canvas>
+    <script>
+        const body = document.querySelector('body')
+        const endScreen = document.querySelector('.end-screen')
+        const settings = document.querySelector('.settings')
+        const settingsBtn = document.querySelector('.settings-btn')
+
+        settings.addEventListener('click', e => e.stopPropagation())
+        settingsBtn.addEventListener('click', e => {
+            e.stopPropagation()
+            settings.classList.add('active')
+            settingsBtn.classList.add('hidden')
+        })
+        body.addEventListener('click', () => {
+            settings.classList.remove('active')
+            settingsBtn.classList.remove('hidden')
+        })
+        setTimeout(() => {
+            settingsBtn.classList.remove('initial-load')
+        }, 1000)
+
+        const randomInt = (min, max) => {
+            min = Math.ceil(min)
+            max = Math.floor(max)
+            return Math.floor(Math.random() * (max - min) + min)
+        }
+
+        const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'white']
+        const randomDvdColor = () => {
+            const old = ctx.fillStyle
+            let randomIndex = randomInt(0, colors.length)
+            ctx.fillStyle = colors[randomIndex]
+            while (old === ctx.fillStyle) {
+                randomIndex = randomInt(0, colors.length)
+                ctx.fillStyle = colors[randomIndex]
+            }
+        }
+
+        const onRangeChange = (rangeElement, func) => {
+            let functionRan, currentValue, previousValue
+            rangeElement.addEventListener("input", e => {
+                functionRan = true
+                currentValue = e.target.value
+                if(currentValue != previousValue) func(e)
+                previousValue = currentValue
+            })
+            rangeElement.addEventListener("change", e => {
+                if (!functionRan) func(e)
+            })
+        }
+        
+        const dvdPath = new Path2D("m591.14 87.936s-70.364 86.814-66.765 92.349c4.9919-5.5355-25.261-93.299-25.261-93.299s-6.3145-18.453-26.123-78.938h-377.06l-13.107 56.782h122.26c63.565 0 102.37 26.328 91.536 72.978-11.71 50.794-67.19 72.48-126.29 72.48h-22.098l28.426-124.19h-98.791l-41.943 181.44h140.28c105.53 0 205.65-56.777 223.7-129.74 3.159-13.41 2.7137-47.121-5.3963-66.965 0-0.4768-0.46481-1.3903-0.91148-2.7549-0.44571-0.4768-0.91149-3.7041 0.91148-4.1758 0.88049-0.47187 2.6881 1.3903 2.6881 1.8365 0 0 0.91629 2.3394 1.7971 4.1707l89.293 258.12 227.35-262.75 96.06-0.47187h23.442c63.612 0 102.86 26.328 92.002 72.978-11.725 50.794-67.61 72.48-126.72 72.48h-22.554l28.851-124.19h-98.75l-41.973 181.44h140.28c105.53 0 206.56-56.777 223.25-129.74 17.139-72.978-56.837-129.76-163.28-129.76h-209.26c-55.471 66.945-65.854 79.888-65.854 79.888zm-99.692 241.04c-266.97 0-483.45 31.397-483.45 70.197 0 38.775 216.48 70.171 483.45 70.171 267.47 0 483.97-31.397 483.97-70.171 0-38.8-216.5-70.197-483.97-70.197zm-17.131 95.134c-61.338 0-110.49-10.63-110.49-23.574s49.147-23.548 110.49-23.548c60.867 0 110.07 10.599 110.07 23.548 0 12.944-49.203 23.574-110.07 23.574zm444.24 44.951v-5.0379h-29.413l-1.2252 5.0379h12.249l-4.9408 38.944h6.1627l4.8896-38.944zm44.085 38.944v-43.981h-4.8611l-15.974 30.172-7.249-30.172h-4.8896l-13.583 43.981h5.0014l10.945-33.906 7.3832 33.906 17.199-33.906 1.1661 33.906z")
+        const dvdSize = { width: 1040, height: 516 }
+        const canvas = document.querySelector('canvas')
+        const ctx = canvas.getContext('2d')
+
+        const endOnCornerInput = document.querySelector('#end-on-corner')
+        let endOnCorner
+        const updateEndOnCorner = () => {
+            endOnCorner = endOnCornerInput.checked
+        }
+        updateEndOnCorner()
+        endOnCornerInput.addEventListener('change', updateEndOnCorner)
+
+        let animationEnded = false
+        const endAnimation = () => {
+            if (endOnCorner && !animationEnded) {
+                animationEnded = true
+                canvas.style.display = 'none'
+                endScreen.style.display = 'flex'
+            }
+        }
+
+        let maxWidth = window.innerWidth
+        let maxHeight = window.innerHeight
+        canvas.width = maxWidth
+        canvas.height = maxHeight
+
+        const collisionBox = {
+            goingLeft: !!randomInt(0, 2),
+            goingUp: !!randomInt(0, 2),
+            paused: false
+        }
+
+        const scaleInput = document.querySelector('#scale')
+        const scaleValue = document.querySelector('.scale.value')
+
+        const validateCollisionBounds = () => {
+            const invalidBounds = collisionBox.width > maxWidth || collisionBox.height > maxHeight
+            if (invalidBounds) {
+                collisionBox.paused = true
+                scaleValue.style.color = 'red'
+                ctx.fillStyle = 'black'
+                draw()
+            } else {
+                if (collisionBox.paused) {
+                    collisionBox.paused = false
+                    scaleValue.style.color = ''
+                    randomDvdColor()
+                    if (collisionBox.goingUp) {
+                        collisionBox.y -= collisionBox.speed
+                        if (collisionBox.y < 0) {
+                            collisionBox.y = 0
+                            collisionBox.goingUp = false
+                        }
+                    } else {
+                        collisionBox.y += collisionBox.speed
+                        if ((collisionBox.y + collisionBox.height) > maxHeight) {
+                            collisionBox.y = (maxHeight - collisionBox.height)
+                            collisionBox.goingUp = true
+                        }
+                    }
+                    if (collisionBox.goingLeft) {
+                        collisionBox.x -= collisionBox.speed
+                        if (collisionBox.x < 0) {
+                            collisionBox.x = 0
+                            collisionBox.goingLeft = false
+                        }
+                    } else {
+                        collisionBox.x += collisionBox.speed
+                        if ((collisionBox.x + collisionBox.width) > maxWidth) {
+                            collisionBox.x = (maxWidth - collisionBox.width)
+                            collisionBox.goingLeft = true
+                        }
+                    }
+                    draw()
+                    setTimeout(() => requestAnimationFrame(frame), 1000 / fps)
+                } else {
+                    if ((collisionBox.y + collisionBox.height) > maxHeight) {
+                        collisionBox.y = (maxHeight - collisionBox.height)
+                        collisionBox.goingUp = true
+                    }
+                    if ((collisionBox.x + collisionBox.width) > maxWidth) {
+                        collisionBox.x = (maxWidth - collisionBox.width)
+                        collisionBox.goingLeft = true
+                    }
+                    draw()
+                }
+            }
+        }
+
+        let scale = Number(scaleInput.value) / 100
+        scaleValue.innerHTML = scaleInput.value
+        collisionBox.width = dvdSize.width * scale
+        collisionBox.height = dvdSize.height * scale
+
+        const updateScale = (newScale) => {
+            scale = Number(newScale) / 100
+            scaleValue.innerHTML = newScale
+            collisionBox.width = dvdSize.width * scale
+            collisionBox.height = dvdSize.height * scale
+            validateCollisionBounds()
+        }
+        onRangeChange(scaleInput, e => updateScale(e.target.value))
+
+        collisionBox.x = (maxWidth / 2) - (collisionBox.width / 2)
+        collisionBox.y = (maxHeight / 2) - (collisionBox.height / 2)
+
+        const speedInput = document.querySelector('#speed')
+        const speedValue = document.querySelector('.speed.value')
+        const updateSpeed = (newSpeed) => {
+            collisionBox.speed = Number(newSpeed)
+            speedValue.innerHTML = newSpeed
+        }
+        updateSpeed(speedInput.value)
+        onRangeChange(speedInput, e => updateSpeed(e.target.value))
+
+        ctx.fillStyle = randomDvdColor()
+        const draw = () => {
+            ctx.clearRect(0, 0, dvdSize.width, dvdSize.height)
+            ctx.setTransform(scale, 0, 0, scale, collisionBox.x, collisionBox.y)
+            ctx.fill(dvdPath)
+        }
+        draw()
+
+        const fpsInput = document.querySelector('#fps')
+        const fpsValue = document.querySelector('.fps.value')
+        let fps
+        const updateFps = (newFps) => {
+            fps = Number(newFps)
+            fpsValue.innerHTML = newFps
+        }
+        updateFps(fpsInput.value)
+        onRangeChange(fpsInput, e => updateFps(e.target.value))
+
+        window.addEventListener('resize', () => {
+            const color = ctx.fillStyle
+            maxWidth = window.innerWidth
+            maxHeight = window.innerHeight
+            canvas.width = maxWidth
+            canvas.height = maxHeight
+            ctx.fillStyle = color
+            validateCollisionBounds()
+        })
+
+        const frame = () => {
+            if (animationEnded || collisionBox.paused) return
+            let directionChanged = false
+            if (collisionBox.goingUp) {
+                collisionBox.y -= collisionBox.speed
+                if (collisionBox.y < 0) {
+                    collisionBox.y = 0
+                    collisionBox.goingUp = false
+                    directionChanged = true
+                    randomDvdColor()
+                }
+            } else {
+                collisionBox.y += collisionBox.speed
+                if ((collisionBox.y + collisionBox.height) > maxHeight) {
+                    collisionBox.y = (maxHeight - collisionBox.height)
+                    collisionBox.goingUp = true
+                    directionChanged = true
+                    randomDvdColor()
+                }
+            }
+            if (collisionBox.goingLeft) {
+                collisionBox.x -= collisionBox.speed
+                if (collisionBox.x < 0) {
+                    collisionBox.x = 0
+                    collisionBox.goingLeft = false
+                    if (directionChanged) endAnimation()
+                    randomDvdColor()
+                }
+            } else {
+                collisionBox.x += collisionBox.speed
+                if ((collisionBox.x + collisionBox.width) > maxWidth) {
+                    collisionBox.x = (maxWidth - collisionBox.width)
+                    collisionBox.goingLeft = true
+                    if (directionChanged) endAnimation()
+                    randomDvdColor()
+                }
+            }
+            draw()
+            setTimeout(() => requestAnimationFrame(frame), 1000 / fps)
+        }
+        frame()
+
+        const resetAnimation = () => {
+            if (animationEnded) {
+                animationEnded = false
+                canvas.style.display = ''
+                endScreen.style.display = 'none'
+                collisionBox.goingLeft = !!randomInt(0, 2)
+                collisionBox.goingUp = !!randomInt(0, 2)
+                collisionBox.x = (maxWidth / 2) - (collisionBox.width / 2)
+                collisionBox.y = (maxHeight / 2) - (collisionBox.height / 2)
+                frame()
+            }
+        }
+    </script>
+</body>
+</html>

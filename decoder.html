@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<style>
+		h1, h3, p {
+			margin: 0;
+		}
+		body {
+			margin: 1rem 0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			font-family: "Lucida Console", Monaco, monospace;
+		}
+		body > * {
+			margin: 1rem 0;
+		}
+		.presets {
+			width: 100%;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
+		.presets > * {
+			margin: 0.25rem 0;
+		}
+		.inputs {
+			width: min(100%, 40rem);
+			display: grid;
+			justify-content: space-around;
+			align-items: center;
+			grid-template-columns: repeat(2, auto);
+			grid-template-rows: repeat(13, auto);
+		}
+		.inputs > * {
+			margin: 0.5rem 0;
+		}
+		.inputs input {
+			width: 2rem;
+		}
+		.errors {
+			color: red;
+			text-align: center;
+		}
+		.message {
+			width: min(90%, 35rem);
+		}
+		.message > p {
+			margin-bottom: 0.5rem;
+		}
+		textarea {
+			width: 100%;
+			height: 6rem;
+		}
+	</style>
+	<title>Decoder</title>
+</head>
+<body>
+	<div class="presets">
+		<h3>Presets:</h3>
+		<button onclick="presetNumbered()">Numbered</button>
+		<button onclick="presetNumberedBackwards()">Numbered Backwards</button>
+		<button onclick="presetRandomNumbers()">Random Numbers</button>
+		<button onclick="presetRandomLetters()">Random Letters</button>
+	</div>
+	<div class="inputs"></div>
+	<div class="errors"></div>
+	<div class="message">
+		<p>Message (letters and spaces only):</p>
+		<textarea class="decoded"></textarea>
+	</div>
+	<div class="actions">
+		<button class="encode" onclick="encodeMessage()">Encode</button>
+		<button class="decode" onclick="decodeMessage()">Decode</button>
+	</div>
+	<div class="message">
+		<p>Encoded Message:</p>
+		<textarea class="encoded"></textarea>
+	</div>
+	<script>
+		const errorsElement = document.querySelector('.errors')
+		const clearErrors = () => errorsElement.innerHTML = ''
+		const addError = (message) => {
+			const errorElement = document.createElement('p')
+			errorElement.innerText = message
+			errorsElement.appendChild(errorElement)
+		}
+
+		const letterInputs = document.querySelector('.inputs')
+		const messageInput = document.querySelector(".decoded")
+		const encodedMessageInput = document.querySelector(".encoded")
+
+		const letters = []
+		for (let i = 0; i < 26; i++) letters.push(String.fromCharCode(i + 65))
+
+		const encoded = {}
+
+		const presetNumbered = () => {
+			letters.forEach((letter, index) => {
+				const letterInput = document.getElementById(letter)
+				letterInput.value = index + 1
+			})
+		}
+		
+		const presetNumberedBackwards = () => {
+			letters.forEach((letter, index) => {
+				const letterInput = document.getElementById(letter)
+				letterInput.value = 26 - index
+			})
+		}
+
+		const randomInt = (min, max) => {
+            min = Math.ceil(min)
+            max = Math.floor(max)
+            return Math.floor(Math.random() * (max - min) + min)
+        }
+
+		const presetRandomNumbers = () => {
+			const used = []
+			letters.forEach((letter, index) => {
+				const letterInput = document.getElementById(letter)
+				let number = randomInt(1, 27)
+				while (used.includes(number)) number = randomInt(1, 27)
+				letterInput.value = number
+				used.push(number)
+			})
+		}
+
+
+		const presetRandomLetters = () => {
+			const used = []
+			letters.forEach((letter, index) => {
+				const letterInput = document.getElementById(letter)
+				let number = randomInt(0, 26)
+				while (used.includes(number)) number = randomInt(0, 26)
+				letterInput.value = String.fromCharCode(number + 65)
+				used.push(number)
+			})
+		}
+
+		const letterValuesValid = () => {
+			clearErrors()
+			let valid = true
+			const usedValues = []
+			letters.forEach((letter) => {
+				const letterInput = document.getElementById(letter)
+				letterInput.value = letterInput.value.trim()
+				if (!letterInput.value) {
+					addError(`Please add a value for the letter ${letter}.`)
+					valid = false
+					return
+				}
+				if (letterInput.value.includes(',')) {
+					addError(`Please remove all commas from the value of ${letter}.`)
+					valid = false
+					return
+				}
+				if (letterInput.value.includes(' ')) {
+					addError(`Please remove all spaces from the value of ${letter}.`)
+					valid = false
+					return
+				}
+				if (usedValues.includes(letterInput.value)) {
+					addError(`The value of ${letter} is already used by another letter.`)
+					valid = false
+					return
+				}
+				encoded[letter] = letterInput.value
+				usedValues.push(letterInput.value)
+			})
+			return valid
+		}
+
+		const messageValid = () => {
+			clearErrors()
+			let valid = true
+			messageInput.value = messageInput.value
+			                     .trim()
+								 .toUpperCase()
+								 .replace(/(?:\r\n|\r|\n)/g, ' ')
+			if (!messageInput.value) {
+				addError('Please enter a message.')
+				valid = false
+			}
+			if (!/^[a-zA-Z\s]*$/.test(messageInput.value)) {
+				addError('Messages can only have letters and spaces.')
+				valid = false
+			}
+			return valid
+		}
+
+		const encodedMessageValid = () => {
+			clearErrors()
+			let valid = true
+			encodedMessageInput.value = encodedMessageInput.value.trim()
+			if (!encodedMessageInput.value) {
+				addError('Please enter an encoded message.')
+				valid = false
+			}
+			return valid
+		}
+
+		const encodeMessage = () => {
+			if (!letterValuesValid()) return
+			if (!messageValid()) return
+			const message = messageInput.value.toUpperCase()
+			const encodedMessage = message.split(' ').map(word => (
+				word.split('').map(letter => encoded[letter]).join(',')
+			)).join(' ')
+			encodedMessageInput.value = encodedMessage
+		}
+		
+		const decodeMessage = () => {
+			if (!letterValuesValid()) return
+			if (!encodedMessageValid()) return
+			let failed = false
+			const encodedMessage = encodedMessageInput.value
+			const message = encodedMessage.split(' ').map(word => (
+				word.split(',').map(encodedLetter => {
+					const decoded = letters.find(letter => (
+                                            encoded[letter] == encodedLetter
+                                        ))
+					if (!decoded) failed = true
+					return decoded
+				}).join('')
+			)).join(' ')
+			if (!failed) messageInput.value = message
+			else addError('Failed to decode message.')
+		}
+
+		letters.forEach((letter, index) => {
+			const letterField = document.createElement("div")
+			const row = index <= 12 ? index + 1 : index - 12
+			const column = index <= 12 ? 1 : 2
+			letterField.style.gridArea = `${row}/${column}/${row}/${column}`
+
+			const letterLabel = document.createElement('label')
+			letterLabel.innerText = letter + ' = '
+			letterLabel.htmlFor = letter
+
+			const letterInput = document.createElement("input")
+			letterInput.type = "text"
+			letterInput.id = letter
+
+			letterField.appendChild(letterLabel)
+			letterField.appendChild(letterInput)
+
+			letterInputs.appendChild(letterField)
+		})
+	</script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .circle, .container, .all-sliders {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .circle {
+            border-radius: 50%;
+            border: solid black 1px;
+        }
+        .container {
+            width: 100%;
+            height: 100%;
+        }
+        .all-sliders {
+            width: 100%;
+        }
+        .slider {
+            text-align: center;
+            width: 100%;
+            margin: 0 1rem;
+        }
+        input[type=range] {
+            width: calc( min( 15rem, 100% ) );
+        }
+    </style>
+    <title>Circles</title>
+</head>
+<body>
+    <div class="all-sliders">
+        <div class="slider">
+            <p class="circles-amt-val"></p>
+            <input type="range" min="1" max="50" value="10" class="circles-amt">
+        </div>
+        <div class="slider">
+            <p class="size-val"></p>
+            <input type="range" min="50" max="100" value="75" class="size">
+        </div>
+        <div class="slider">
+            <p class="weight-val"></p>
+            <input type="range" min="0" max="100" value="50" class="weight">
+        </div>
+    </div>
+    <div class="container"></div>
+    <script>
+        const body = document.querySelector('body')
+        const container = document.querySelector('.container')
+
+        const circlesAmtRange = document.querySelector('.circles-amt')
+        const sizeRange = document.querySelector('.size')
+        const weightRange = document.querySelector('.weight')
+
+        const circlesAmtValue = document.querySelector('.circles-amt-val')
+        const sizeValue = document.querySelector('.size-val')
+        const weightValue = document.querySelector('.weight-val')
+
+        const renderCircles = () => {
+            const circlesAmt = circlesAmtRange.value
+            const maxSize = sizeRange.value
+            const weight = weightRange.value / 100
+
+            const calcSize = (index) => {
+                const xVal = index / circlesAmt
+                const multiplier = (weight * (Math.pow(xVal, 3))) + ((1 - weight) * xVal)
+                return maxSize - ((maxSize / circlesAmt) * (multiplier * circlesAmt))
+            }
+
+            const insertCircles = (amount, element) => {
+                const circle = document.createElement('div')
+                circle.classList.add('circle')
+                const size = `${calcSize(circlesAmt - amount)}px`
+                circle.style.width = size
+                circle.style.height = size
+                element.appendChild(circle)
+                if (amount > 1) insertCircles(amount - 1, circle)
+            }
+
+            container.innerHTML = ''
+            insertCircles(circlesAmt, container)
+        }
+
+        const updateMaxSize = () => {
+            const currentRatio = sizeRange.value / sizeRange.max
+            sizeRange.max = Math.min(container.offsetWidth, container.offsetHeight) - 20
+            sizeRange.value = sizeRange.max * currentRatio
+        }
+
+        const renderCirclesAmt = () => {
+            const circlesAmt = circlesAmtRange.value
+            circlesAmtValue.innerHTML = `Circles: ${circlesAmt}`
+        }
+
+        const renderSize = () => {
+            const maxSize = sizeRange.value
+            sizeValue.innerHTML = `Size: ${maxSize}px`
+        }
+
+        const renderWeight = () => {
+            const weight = weightRange.value / 100
+            weightValue.innerHTML = `Weight: ${weight}`
+        }
+
+        const onRangeChange = (rangeElement, callback) => {
+            let callbackCalled, currentValue, previousValue
+            rangeElement.addEventListener('input', e => {
+                callbackCalled = true
+                currentValue = e.target.value
+                if(currentValue !== previousValue) callback(e)
+                previousValue = currentValue
+            })
+            rangeElement.addEventListener('change', e => {
+                if (!callbackCalled) callback(e)
+            })
+        }
+
+        onRangeChange(circlesAmtRange, () => {
+            renderCirclesAmt()
+            renderCircles()
+        })
+
+        onRangeChange(sizeRange, () => {
+            renderSize()
+            renderCircles()
+        })
+
+        onRangeChange(weightRange, () => {
+            renderWeight()
+            renderCircles()
+        })
+
+        window.addEventListener('resize', () => {
+            updateMaxSize()
+            renderSize()
+            renderCircles()
+        })
+        
+        window.addEventListener('load', () => {
+            renderCirclesAmt()
+            renderWeight()
+            setTimeout(() => {
+                updateMaxSize()
+                renderSize()
+                renderCircles()
+            }, 0)
+        })
+    </script>
+</body>
+</html>

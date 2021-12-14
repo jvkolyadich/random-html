@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random HTML Projects</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            font-family: sans-serif;
+        }
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+        .title { margin: 0; }
+        .page-title {
+            margin-top: 1.5rem;
+        }
+        .page-description {
+            margin-top: 0.5rem;
+        }
+        .card {
+            width: calc( min( 40rem, (100% - 4rem) ) );
+            padding: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 0.25rem 0.5rem 0 rgba(0, 0, 0, 0.4);
+            margin-top: 1.5rem;
+        }
+        body:last-child {
+            margin-bottom: 1.5rem;
+        }
+        .card .title {
+            margin-top: 0.5rem;
+        }
+        .preview {
+            width: 100%;
+            height: 50vh;
+            margin-top: 1rem;
+            box-shadow: 0 0 0.25rem 0 rgba(0, 0, 0, 0.2);
+        }
+        .card .description {
+            margin-top: 1rem;
+        }
+        .card .description a {
+            color: rgb(22, 52, 182);
+            text-decoration: underline;
+        }
+        .project-link {
+            color: rgb(22, 52, 182);
+            text-decoration: underline;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title page-title">Random HTML Projects</h1>
+    <div class="description page-description">
+        A collection of small projects created from scratch with HTML, CSS, 
+        and JavaScript
+    </div>
+    <div class="card">
+        <h2 class="title"><a href="./circles.html">Circles</a></h3>
+        <iframe class="preview" src="./circles.html" frameBorder="false"></iframe>
+        <div class="description">
+            I was working on a project where I had to create a virtual 
+            joystick with adjustable sensitivity. I decided to make a 
+            prototype in HTML since it was the easiest way to play around 
+            with the values and see what results they give.
+        </div>
+        <div class="project-link">
+            <a href="./circles.html" target="_blank">Open project →</a>
+        </div>
+    </div>
+    <div class="card">
+        <h2 class="title"><a href="./clock.html">Clock</a></h3>
+        <iframe class="preview" src="./clock.html" frameBorder="false"></iframe>
+        <div class="description">
+            A clock inspired by a
+            <a href="https://www.youtube.com/watch?v=MCi6AZMkxcU" target="_blank">
+            youtube video</a> about optimized, accurate javascript counters. 
+            Once initialized, it doesn't skip seconds (a common problem when 
+            using setInterval for clocks and counters) and doesn't update when 
+            it doesn't need to (only once per second and not at all when the 
+            tab isn't being used)
+        </div>
+        <div class="project-link">
+            <a href="./clock.html" target="_blank">Open project →</a>
+        </div>
+    </div>
+    <div class="card">
+        <h2 class="title"><a href="./decoder.html">Message Encoder/Decoder</a></h3>
+        <iframe class="preview" src="./decoder.html" frameBorder="false"></iframe>
+        <div class="description">
+            I had an assignment at school where I had to decode a message by 
+            answering a list of questions correctly. It took me way too long 
+            to decode the message by hand, so I created this in case we would 
+            have a similar assignment in the future. We didn't.
+        </div>
+        <div class="project-link">
+            <a href="./decoder.html" target="_blank">Open project →</a>
+        </div>
+    </div>
+    <div class="card">
+        <h2 class="title"><a href="./dvd.html">DVD Logo</a></h3>
+        <iframe class="preview" src="./dvd.html" frameBorder="false"></iframe>
+        <div class="description">
+            Inspired by The Office. Uses HTML canvas. Settings are in the top 
+            right corner
+        </div>
+        <div class="project-link">
+            <a href="./dvd.html" target="_blank">Open project →</a>
+        </div>
+    </div>
+    <div class="card">
+        <h2 class="title"><a href="./image-upload.html">Image Upload</a></h3>
+        <iframe class="preview" src="./image-upload.html" frameBorder="false"></iframe>
+        <div class="description">
+            I needed to collect pictures from a lot of people for an 
+            end-of-the-year slideshow. I wanted to make it as easy as possible 
+            for people, but I didn't want to use social media apps because of 
+            image compression and having the pictures in different places. 
+            This demo doesn't actually upload the pictures anywhere. It waits 
+            one second before saying the upload is successful and says that 
+            the upload failed every 3rd picture.
+        </div>
+        <div class="project-link">
+            <a href="./image-upload.html" target="_blank">Open project →</a>
+        </div>
+    </div>
+    <div class="card">
+        <h2 class="title"><a href="./lights.html">Lights</a></h3>
+        <iframe class="preview" src="./lights.html" frameBorder="false"></iframe>
+        <div class="description">
+            This was a side project to figure out how to make interactive 
+            lights while creating a 
+            <a href="https://github.com/jvkolyadich/family-feud" target="_blank">
+            family feud game</a>.
+        </div>
+        <div class="project-link">
+            <a href="./lights.html" target="_blank">Open project →</a>
+        </div>
+    </div>
+    <div class="card">
+        <h2 class="title"><a href="./ticktactoe.html">Scalable Tik-tak-toe</a></h3>
+        <iframe class="preview" src="./ticktactoe.html" frameBorder="false"></iframe>
+        <div class="description">
+            Not as fun as I was expecting it to be. Basically impossible to 
+            beat another person on anything bigger than 3x3.
+        </div>
+        <div class="project-link">
+            <a href="./ticktactoe.html" target="_blank">Open project →</a>
+        </div>
+    </div>
+</body>
+</html>

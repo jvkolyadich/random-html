@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lights</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            color: white;
+            background-color: black;
+        }
+        .container {
+            width: 96%;
+            height: 96%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: grid;
+        }
+        .light {
+            width: 5vmin;
+            height: 5vmin;
+            border-radius: 2.5vmin;
+            background-color: #4e4e4e;
+        }
+        @keyframes blink {
+            10% { background-color: yellow; }
+            25% { background-color: yellow; }
+            100% { background-color: #4e4e4e; }
+        }
+        .controls {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: calc(100% - 22vmin);
+            transform: translate(-50%, -50%);
+        }
+        .slider {
+            text-align: center;
+            width: 100%;
+            margin: 0 1rem;
+        }
+        input[type=range] {
+            width: calc( min( 18rem, 100% ) );
+        }
+    </style>
+</head>
+<body>
+    <div class="container"></div>
+    <div class="controls">
+        <div class="slider">
+            <p class="rows-amt-label"></p>
+            <input type="range" min="1" max="15" value="7" class="rows-amt">
+        </div>
+        <div class="slider">
+            <p class="columns-amt-label"></p>
+            <input type="range" min="1" max="15" value="7" class="columns-amt">
+        </div>
+        <div class="slider">
+            <p class="speed-label"></p>
+            <input type="range" min="1" max="100" value="50" class="speed">
+        </div>
+        <div class="slider">
+            <p class="stripes-label"></p>
+            <input type="range" min="1" max="5" value="2" class="stripes">
+        </div>
+    </div>
+    <script>
+        const container = document.querySelector('.container')
+
+        const rowsAmtRange = document.querySelector('.rows-amt')
+        const columnsAmtRange = document.querySelector('.columns-amt')
+        const speedRange = document.querySelector('.speed')
+        const stripesRange = document.querySelector('.stripes')
+
+        const rowsAmtLabel = document.querySelector('.rows-amt-label')
+        const columnsAmtLabel = document.querySelector('.columns-amt-label')
+        const speedLabel = document.querySelector('.speed-label')
+        const stripesLabel = document.querySelector('.stripes-label')
+
+        const renderLights = () => {
+            const rows = Number(rowsAmtRange.value)
+            const columns = Number(columnsAmtRange.value)
+            const animationSeconds = 4 * ((115 - Number(speedRange.value)) / 115)
+            const stripes = Number(stripesRange.value)
+    
+            const perimeterCount = (rows * 2) + ((columns - 2) * 2)
+            const delayInterval = (animationSeconds * 1000 * stripes) / perimeterCount
+            const maxDelay = delayInterval * (perimeterCount - 1)
+    
+            container.style.gridTemplateRows = `repeat(${rows}, auto)`
+            container.style.gridTemplateColumns = `repeat(${columns}, auto)`
+    
+            container.innerHTML = ''
+            for (let i = 0; i < perimeterCount; i++) {
+                const row = (
+                    i < columns
+                    ? 0
+                    : i < (columns + rows - 1)
+                    ? i - columns + 1
+                    : i < (((columns - 1) * 2) + rows)
+                    ? rows - 1
+                    : (rows - 2) - (i - (((columns - 1) * 2) + rows))
+                )
+                const column = (
+                    i < columns
+                    ? i
+                    : i < (columns + rows - 1)
+                    ? columns - 1
+                    : i < (((columns - 1) * 2) + rows)
+                    ? (columns - 2) - (i - (columns + rows - 1))
+                    : 0
+                )
+                const isInFirstRow = row === 0
+                const isInLastRow = row === (rows - 1)
+                const isInFirstColumn = column === 0
+                const isInLastColumn = column === (columns - 1)
+                const isCorner = (
+                    (isInFirstRow && isInFirstColumn) ||
+                    (isInFirstRow && isInLastColumn) ||
+                    (isInLastRow && isInFirstColumn) ||
+                    (isInLastRow && isInLastColumn)
+                )
+                const light = document.createElement('div')
+                light.classList.add('light')
+                light.style.alignSelf = (
+                    isCorner
+                    ? 'center'
+                    : isInFirstRow
+                    ? 'start'
+                    : isInLastRow
+                    ? 'end'
+                    : 'center'
+                )
+                light.style.justifySelf = (
+                    isCorner
+                    ? 'center'
+                    : isInFirstColumn
+                    ? 'start'
+                    : isInLastColumn
+                    ? 'end'
+                    : 'center'
+                )
+                light.style.gridArea = `${row + 1}/${column + 1}/${row + 1}/${column + 1}`
+                light.style.animation = `${animationSeconds}s blink infinite`
+                light.style.animationDelay = `${(delayInterval * i) - maxDelay}ms`
+                container.appendChild(light)
+            }
+        }
+
+        const renderLabel = (rangeElement, labelElement, prefix) => {
+            labelElement.innerText = `${prefix}: ${rangeElement.value}`
+        }
+
+        const renderRowsAmt = () =>
+            renderLabel(rowsAmtRange, rowsAmtLabel, 'Rows')
+        const renderColumnsAmt = () =>
+            renderLabel(columnsAmtRange, columnsAmtLabel, 'Columns')
+        const renderSpeed = () =>
+            renderLabel(speedRange, speedLabel, 'Speed')
+        const renderStripes = () =>
+            renderLabel(stripesRange, stripesLabel, 'Stripes')
+
+        const onRangeChange = (rangeElement, callback) => {
+            let callbackCalled, currentValue, previousValue
+            rangeElement.addEventListener('input', e => {
+                callbackCalled = true
+                currentValue = e.target.value
+                if(currentValue !== previousValue) callback(e)
+                previousValue = currentValue
+            })
+            rangeElement.addEventListener('change', e => {
+                if (!callbackCalled) callback(e)
+            })
+        }
+
+        onRangeChange(rowsAmtRange, () => {
+            renderRowsAmt()
+            renderLights()
+        })
+
+        onRangeChange(columnsAmtRange, () => {
+            renderColumnsAmt()
+            renderLights()
+        })
+
+        onRangeChange(speedRange, () => {
+            renderSpeed()
+            renderLights()
+        })
+
+        onRangeChange(stripesRange, () => {
+            renderStripes()
+            renderLights()
+        })
+
+        window.addEventListener('load', () => {
+            renderRowsAmt()
+            renderColumnsAmt()
+            renderSpeed()
+            renderStripes()
+            renderLights()
+        })
+    </script>
+</body>
+</html>
