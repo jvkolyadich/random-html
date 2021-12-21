@@ -36,37 +36,39 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: calc(100% - 22vmin);
+            width: calc( min( 30rem, 72vw ) );
             transform: translate(-50%, -50%);
         }
-        .slider {
+        .control {
             text-align: center;
             width: 100%;
-            margin: 0 1rem;
         }
-        input[type=range] {
-            width: calc( min( 18rem, 100% ) );
+        .label {
+            margin-bottom: 1rem;
+        }
+        .slider {
+            width: 100%;
         }
     </style>
 </head>
 <body>
     <div class="container"></div>
     <div class="controls">
-        <div class="slider">
-            <p class="rows-amt-label"></p>
-            <input type="range" min="1" max="15" value="7" class="rows-amt">
+        <div class="control">
+            <p class="label rows-amt-label"></p>
+            <input type="range" min="2" max="16" value="7" class="slider rows-amt">
         </div>
-        <div class="slider">
-            <p class="columns-amt-label"></p>
-            <input type="range" min="1" max="15" value="7" class="columns-amt">
+        <div class="control">
+            <p class="label columns-amt-label"></p>
+            <input type="range" min="2" max="16" value="7" class="slider columns-amt">
         </div>
-        <div class="slider">
-            <p class="speed-label"></p>
-            <input type="range" min="1" max="100" value="50" class="speed">
+        <div class="control">
+            <p class="label speed-label"></p>
+            <input type="range" min="1" max="100" value="50" class="slider speed">
         </div>
-        <div class="slider">
-            <p class="stripes-label"></p>
-            <input type="range" min="1" max="5" value="2" class="stripes">
+        <div class="control">
+            <p class="label stripes-label"></p>
+            <input type="range" min="1" max="5" value="2" class="slider stripes">
         </div>
     </div>
     <script>
