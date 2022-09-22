@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debounce</title>
+  <style>
+    body, html { height: 100%; }
+
+    body {
+      margin: 0;
+      background-color: #a0a7ab;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    }
+
+    main {
+      padding: 2rem 1rem;
+      background-color: #fff;
+      display: flex;
+      flex-direction: column;
+      border-radius: 0.25rem;
+      width: calc(min(30rem, 100vw - 6rem));
+      max-height: calc(100vh - 8rem);
+    }
+
+    .content {
+      width: calc(100% - 2rem);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 0 1rem;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .title {
+      width: 100%;
+      font-size: 2rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 0.75rem;
+    }
+
+    .label {
+      margin-bottom: 0.25rem;
+    }
+
+    .slider {
+      width: 100%;
+      margin: 0;
+      margin-top: 0.25rem;
+    }
+
+    .input {
+      width: calc(100% - 1rem - 2px);
+      outline: none;
+      padding: 0.5rem;
+      border: solid #c7c7c7 1px;
+      border-radius: 0.25rem;
+      font-size: 1rem;
+    }
+
+    .input:focus {
+      border-color: black;
+    }
+
+    .output {
+      display: flex;
+      align-items: center;
+      background-color: #f3f3f3;
+      width: calc(100% - 1rem - 2px);
+      height: 2.125rem;
+      padding: 0 0.5rem;
+      border: solid #c7c7c7 1px;
+      border-radius: 0.25rem;
+      font-size: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="title">Debounce</div>
+    <div class="content">
+      <div class="field">
+        <div class="label delay-label">Delay: 1000ms</div>
+        <input type="range" min="0" max="6" value="4" class="slider delay-slider" />
+      </div>
+      <div class="field">
+        <div class="label">Input</div>
+        <input type="text" class="input" />
+      </div>
+      <div class="field">
+        <div class="label">Instant</div>
+        <div class="output instant"></div>
+      </div>
+      <div class="field">
+        <div class="label">Leading debounce</div>
+        <div class="output debounce-leading"></div>
+      </div>
+      <div class="field">
+        <div class="label">Trailing debounce</div>
+        <div class="output debounce-trailing"></div>
+      </div>
+      <div class="field">
+        <div class="label">Leading and trailing debounce</div>
+        <div class="output debounce-leading-trailing"></div>
+      </div>
+      <div class="field">
+        <div class="label">Throttle</div>
+        <div class="output throttle"></div>
+      </div>
+    </div>
+  </main>
+  <script>
+    const delayLabel = document.querySelector('.delay-label')
+    const delaySlider = document.querySelector('.delay-slider')
+    const input = document.querySelector('.input')
+    const instantOutput = document.querySelector('.instant')
+    const debounceLeadingOutput = document.querySelector('.debounce-leading')
+    const debounceTrailingOutput = document.querySelector('.debounce-trailing')
+    const debounceLeadingTrailingOutput = document.querySelector('.debounce-leading-trailing')
+    const throttleOutput = document.querySelector('.throttle')
+
+    const debounceLeading = (callback, delay) => {
+        let timer
+        return (...args) => {
+            if (!timer) callback(...args)
+            clearTimeout(timer)
+            timer = window.setTimeout(() => timer = undefined, delay)
+        }
+    }
+
+    const debounceTrailing = (callback, delay) => {
+        let timer
+        return (...args) => {
+            clearTimeout(timer)
+            timer = window.setTimeout(() => callback(...args), delay)
+        }
+    }
+
+    const debounceLeadingTrailing = (callback, delay) => {
+        let timer
+        return (...args) => {
+            if (!timer) callback(...args)
+            clearTimeout(timer)
+            timer = window.setTimeout(() => {
+                timer = undefined
+                callback(...args)
+            }, delay)
+        }
+    }
+
+    const throttle = (callback, delay) => {
+      let timer
+      let mostRecentArgs
+      return (...args) => {
+        if (!timer) {
+          callback(...args)
+          timer = setTimeout(() => {
+            if (mostRecentArgs) callback(...mostRecentArgs)
+            timer = undefined
+          }, delay)
+        } else {
+          mostRecentArgs = args
+        }
+      }
+    }
+
+    const handlerForElement = (element) => (e) => {
+      element.innerText = e.target.value
+    }
+
+    let debounceLeadingHandler = null
+    let debounceTrailingHandler = null
+    let debounceLeadingTrailingHandler = null
+    let throttleHandler = null
+    
+    const setupInputHandlers = (delay) => {
+      if (debounceLeadingHandler)
+        input.removeEventListener('input', debounceLeadingHandler)
+      if (debounceTrailingHandler)
+        input.removeEventListener('input', debounceTrailingHandler)
+      if (debounceLeadingTrailingHandler)
+        input.removeEventListener('input', debounceLeadingTrailingHandler)
+      if (throttleHandler)
+        input.removeEventListener('input', throttleHandler)
+      
+      debounceLeadingHandler = debounceLeading(
+        handlerForElement(debounceLeadingOutput), delay
+      )
+      debounceTrailingHandler = debounceTrailing(
+        handlerForElement(debounceTrailingOutput), delay
+      )
+      debounceLeadingTrailingHandler = debounceLeadingTrailing(
+        handlerForElement(debounceLeadingTrailingOutput), delay
+      )
+      throttleHandler = throttle(
+        handlerForElement(throttleOutput), delay
+      )
+
+      input.addEventListener('input', debounceLeadingHandler)
+      input.addEventListener('input', debounceTrailingHandler)
+      input.addEventListener('input', debounceLeadingTrailingHandler)
+      input.addEventListener('input', throttleHandler)
+    }
+
+    const onRangeChange = (rangeElement, callback) => {
+        let callbackCalled, currentValue, previousValue
+        rangeElement.addEventListener('input', e => {
+            callbackCalled = true
+            currentValue = e.target.value
+            if (currentValue !== previousValue) callback(e)
+            previousValue = currentValue
+        })
+        rangeElement.addEventListener('change', e => {
+            if (!callbackCalled) callback(e)
+        })
+    }
+
+    const delays = [100, 250, 500, 750, 1000, 2000, 3000]
+    onRangeChange(delaySlider, (e) => {
+      const sliderValue = e.target.value
+      const delayValue = delays[sliderValue]
+      setupInputHandlers(delayValue)
+      delayLabel.innerText = `Delay: ${delayValue}ms`
+    })
+
+    input.addEventListener('input', handlerForElement(instantOutput))
+    setupInputHandlers(1000)
+  </script>
+</body>
+</html>
